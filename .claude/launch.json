@@ -4,7 +4,7 @@
     {
       "name": "exoogle",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["server.js"],
+      "runtimeArgs": ["claude/server.js"],
       "port": 3000
     }
   ]

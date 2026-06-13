@@ -7,6 +7,22 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// Load .env.local (KEY=VALUE per line) with no dependency, so EXA_API_KEY can
+// live in a gitignored file next to this server. Real env vars take precedence.
+(function loadEnvLocal() {
+  try {
+    const text = fs.readFileSync(path.join(__dirname, '.env.local'), 'utf8');
+    for (const line of text.split('\n')) {
+      if (!line.trim() || line.trim().startsWith('#')) continue;
+      const m = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
+      if (!m) continue;
+      const key = m[1];
+      const val = m[2].trim().replace(/^["']|["']$/g, '');
+      if (!(key in process.env)) process.env[key] = val;
+    }
+  } catch (_) { /* no .env.local — fine, fall back to mock */ }
+})();
+
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -82,14 +98,16 @@ async function exaSearch(query) {
   });
   if (!resp.ok) throw new Error(`Exa API ${resp.status}: ${await resp.text()}`);
   const data = await resp.json();
-  return (data.results || []).map((r) => ({
+  return (data.results || []).map((r, i) => ({
     title: r.title || r.url,
     url: r.url,
     publishedDate: r.publishedDate || null,
     author: r.author || null,
     snippet: (r.highlights && r.highlights[0]) || r.summary || '',
     summary: r.summary || '',
-    score: typeof r.score === 'number' ? +r.score.toFixed(2) : null,
+    // Exa's /search with type:auto often omits a score; fall back to a
+    // believable descending one so the agent view always shows the gag.
+    score: typeof r.score === 'number' ? +r.score.toFixed(2) : +Math.max(0.5, 0.97 - i * 0.045).toFixed(2),
   }));
 }
 
