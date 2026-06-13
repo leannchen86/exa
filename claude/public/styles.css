@@ -276,16 +276,33 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 .ctx-track {
+  position: relative;
   height: 6px;
   background: #e8eaed;
   border-radius: 999px;
   overflow: hidden;
 }
-.ctx-fill {
+/* faint bar: what the raw pages would have cost the window */
+.ctx-raw {
+  position: absolute;
+  left: 0;
+  top: 0;
   height: 100%;
   width: 0;
-  background: linear-gradient(90deg, #4285F4, #34A853);
+  background: #c6dafc;
+  transition: width .12s linear;
+}
+/* bright sliver: what we actually kept */
+.ctx-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  min-width: 3px;
+  background: linear-gradient(90deg, #188038, #34A853);
   border-radius: 999px;
+  transition: width .12s linear;
 }
 .agent-status {
   margin-top: 9px;
@@ -373,10 +390,12 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
   margin-bottom: 9px;
 }
 .ctx-card-head .score { color: #188038; font-weight: 700; }
+.ctx-card-head .toks .kept { color: #188038; font-weight: 700; }
+.ctx-card-head .toks .raw { color: #9aa0a6; }
 .ctx-card-head .chip {
   margin-left: auto;
-  color: #1a73e8;
-  background: #e8f0fe;
+  color: #188038;
+  background: #e6f4ea;
   padding: 2px 9px;
   border-radius: 999px;
   font-size: 11px;
