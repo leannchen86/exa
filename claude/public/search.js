@@ -98,6 +98,7 @@ function renderAIOverview(answer, results) {
             </svg>
           </span>
           <span class="aio-label">AI Overview</span>
+          <span class="aio-head-srcs">${faviconStack}${srcCount > 3 ? `<span class="aio-head-more">+${srcCount - 3}</span>` : ''}</span>
         </div>
         <div class="aio-text">${text}</div>
         <button class="aio-more" type="button">Show more <span class="chev">⌄</span></button>

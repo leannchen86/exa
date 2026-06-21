@@ -135,6 +135,10 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
 }
 .hdr-icon:hover { background: rgba(60,64,67,.08); }
 .serp-actions .signin-btn { margin-left: 8px; }
+/* mobile-only header bits (G icon + account avatar), hidden on desktop */
+.serp-g { display: none; align-items: center; }
+.serp-g img { display: block; width: 28px; height: 28px; }
+.serp-avatar { display: none; background: none; border: none; cursor: pointer; padding: 0; }
 
 /* ---------- tabs ---------- */
 .serp-tabs {
@@ -149,7 +153,7 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
 .tab {
   display: flex; align-items: center; gap: 5px; height: 48px;
   color: #5f6368; border-bottom: 3px solid transparent;
-  white-space: nowrap;
+  white-space: nowrap; flex: none;
 }
 .tab:hover { color: #202124; }
 .tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
@@ -159,7 +163,7 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
 
 /* ---------- main column ---------- */
 .serp-main { flex: 1; padding: 14px 24px 60px var(--gut); }
-@media (max-width: 860px) { :root { --gut: 24px; } }
+@media (max-width: 860px) { :root { --gut: 16px; } }
 
 .result-stats { color: #70757a; font-size: 13px; margin-bottom: 14px; }
 
@@ -168,6 +172,8 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
 .aio-inner { display: flex; gap: 44px; }
 .aio-main { flex: 1 1 auto; min-width: 0; max-width: 600px; }
 .aio-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.aio-head-srcs { display: none; align-items: center; margin-left: auto; }
+.aio-head-more { font-size: 13px; color: #5f6368; margin-left: 4px; }
 .aio-spark { display: inline-grid; place-items: center; }
 .aio-label { font-size: 18px; font-weight: 400; color: #202124; }
 .aio-text { font-size: 16px; line-height: 1.6; color: #1f1f1f; }
@@ -257,3 +263,32 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
 /* ---------- SERP footer ---------- */
 .footer-serp { margin-top: auto; }
 .footer-serp .footer-bottom { justify-content: flex-start; }
+
+/* ---------- mobile: Google's phone SERP ---------- */
+@media (max-width: 600px) {
+  .serp-top { padding: 8px 12px 6px; }
+  .serp-logo { display: none; }           /* hide desktop wordmark */
+  .serp-g { display: inline-flex; }       /* show colorful G */
+  .serp-search { margin-left: 10px; flex: 1 1 auto; }
+  .serp-search-box { height: 46px; box-shadow: 0 1px 6px rgba(32,33,36,.18); border-color: rgba(223,225,229,0); }
+  .serp-search-box .sb-icon:not(#clearBtn) { display: none; }  /* keep only clear x */
+  .sb-divider { display: none; }
+  .serp-actions { margin-left: 6px; gap: 0; }
+  .serp-actions .hdr-icon, .serp-actions .signin-btn { display: none; }
+  .serp-avatar { display: inline-flex; }
+
+  .serp-tabs { height: 44px; gap: 20px; padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
+  .serp-tabs::-webkit-scrollbar { display: none; }
+  .tabs-spacer, .tab-tools { display: none; }
+
+  .serp-main { padding: 12px 16px 48px; }
+  .ai-overview { max-width: none; }
+  .aio-inner { flex-direction: column; gap: 0; }
+  .aio-main { max-width: none; }
+  .aio-card { display: none; }             /* sources collapse into the header on mobile */
+  .aio-head-srcs { display: flex; }
+  .aio-label { font-size: 17px; }
+
+  .g-result, .g-snippet, .paa, .g-empty { max-width: none; }
+  .g-title { font-size: 19px; }
+}
