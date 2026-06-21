@@ -4,13 +4,11 @@ Google's face, Exa's brain. A parody search prototype: it looks like the Google
 homepage, but every search is answered by [Exa](https://exa.ai) neural search
 underneath.
 
-Two views, one search:
-- **human** — a faithful Google homepage + SERP (the disguise). The joke hides
-  in **subtle tells**: the favicon isn't a "G", the result count is suspiciously
-  precise, the search time suspiciously fast, the results a little *too* on-point.
-- **agent** — "what the model sees": streamed context cards with relevance scores
-  and per-page token counts, a filling context-window meter, and a synthesized,
-  cited answer. *I'm Feeling Agentic* on the homepage drops you straight in.
+It wears a faithful Google homepage as a disguise — the favicon isn't a "G" — but
+every search drops you into the **agent view**: "what the model sees". Streamed
+context cards with relevance scores and per-page token counts, a filling
+context-window meter, and a synthesized, cited answer. Either homepage button
+(*Google Search* or *I'm Feeling Agentic*) takes you there.
 
 ## Run it
 

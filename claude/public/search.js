@@ -1,5 +1,5 @@
-// Results page: read ?q=, ask /api/search, render a Google-style SERP.
-// Two views: "human" (the disguise) and "agent" (what the model sees).
+// Results page: read ?q=, ask /api/search, render the agent view —
+// "what the model sees": context cards, a context-window meter, one cited answer.
 
 const params = new URLSearchParams(window.location.search);
 const query = (params.get('q') || '').trim();
@@ -7,34 +7,22 @@ const query = (params.get('q') || '').trim();
 const input = document.getElementById('q');
 const statsEl = document.getElementById('stats');
 const resultsEl = document.getElementById('results');
-const paginationEl = document.getElementById('pagination');
 const clearBtn = document.getElementById('clearBtn');
-const viewToggle = document.getElementById('viewToggle');
 const ctxMeter = document.getElementById('ctxMeter');
 const ctxRaw = document.getElementById('ctxRaw');
 const ctxFill = document.getElementById('ctxFill');
 const ctxNums = document.getElementById('ctxNums');
 const agentStatus = document.getElementById('agentStatus');
-const agentChip = document.getElementById('agentChip');
 const answerEl = document.getElementById('answer');
 
 const BUDGET = 200000; // context window, in tokens
 let DATA = null;
-let view = localStorage.getItem('exoogle-view') || 'human';
-let runId = 0; // bumped on every view switch so stale streams self-cancel
+let runId = 0; // bumped on each render so stale streams self-cancel
 
 input.value = query;
-document.title = query ? `${query} - Google Search` : 'Google';
+document.title = query ? `${query} - Search` : 'Search';
 
 clearBtn?.addEventListener('click', () => { input.value = ''; input.focus(); });
-
-viewToggle.querySelectorAll('.vt').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    view = btn.dataset.view;
-    localStorage.setItem('exoogle-view', view);
-    if (DATA) applyView();
-  });
-});
 
 if (!query) {
   resultsEl.innerHTML = '<p class="empty">type a search to get started.</p>';
@@ -52,71 +40,10 @@ async function run() {
       r.kept = estTok(r.excerpt);   // tokens actually placed in context
       r.raw = rawTokensFor(r.url);  // tokens the full page would have cost
     });
-    applyView();
+    renderAgent(DATA, ++runId);
   } catch (err) {
     resultsEl.innerHTML = '<p class="empty">something went wrong reaching the search backend.</p>';
   }
-}
-
-function applyView() {
-  runId++; // cancel any in-flight stream
-  viewToggle.querySelectorAll('.vt').forEach((b) => {
-    b.classList.toggle('active', b.dataset.view === view);
-  });
-  if (view === 'agent') renderAgent(DATA, runId);
-  else renderHuman(DATA);
-}
-
-// ============================================================ HUMAN VIEW
-function renderHuman(data) {
-  const results = data.results || [];
-  ctxMeter.hidden = true;
-  agentChip.hidden = true;
-  answerEl.hidden = true;
-
-  if (!results.length) {
-    statsEl.textContent = '';
-    resultsEl.innerHTML = `<p class="empty">Your search - <b>${escapeHtml(query)}</b> - did not match any documents.</p>`;
-    return;
-  }
-
-  const count = (11000 + Math.floor(Math.random() * 900000)).toLocaleString('en-US');
-  statsEl.textContent = `About ${count} results (${data.elapsed} seconds)`;
-
-  let html = '';
-  const featured = results.find((r) => r.summary && r.summary.length > 40);
-  if (featured) {
-    html += `
-      <div class="featured">
-        <div class="featured-text">${escapeHtml(clampExcerpt(featured.summary, 320))}</div>
-        <div class="featured-src">
-          <a class="result-title" href="${escapeAttr(featured.url)}">${escapeHtml(hostName(featured.url))}</a>
-        </div>
-      </div>`;
-  }
-
-  for (const r of results) {
-    const host = hostName(r.url);
-    const fav = faviconFor(host);
-    const date = r.publishedDate
-      ? `<span class="snippet-date">${formatDate(r.publishedDate)} — </span>`
-      : '';
-    html += `
-      <div class="result">
-        <div class="result-head">
-          <span class="favicon" style="background:${fav.color}">${fav.letter}</span>
-          <div class="result-site">
-            <div class="site-name">${escapeHtml(prettySite(host))}</div>
-            <div class="site-url">${escapeHtml(breadcrumb(r.url))}</div>
-          </div>
-        </div>
-        <a class="result-title" href="${escapeAttr(r.url)}">${escapeHtml(r.title)}</a>
-        <div class="result-snippet">${date}${escapeHtml(r.excerpt)}</div>
-      </div>`;
-  }
-
-  resultsEl.innerHTML = html;
-  paginationEl.hidden = false;
 }
 
 // ============================================================ AGENT VIEW
@@ -124,8 +51,6 @@ function renderHuman(data) {
 // synthesize one answer. The meter contrasts raw web vs. tokens kept.
 async function renderAgent(data, myRun) {
   const results = data.results || [];
-  agentChip.hidden = false;
-  paginationEl.hidden = true;
   answerEl.hidden = true;
   resultsEl.innerHTML = '';
 
@@ -136,7 +61,7 @@ async function renderAgent(data, myRun) {
     return;
   }
 
-  statsEl.textContent = `${results.length} sources retrieved · 0 ads · agents don't click`;
+  statsEl.textContent = `${results.length} sources`;
   ctxMeter.hidden = false;
   setMeter(0, 0);
 
@@ -150,7 +75,7 @@ async function renderAgent(data, myRun) {
   let raw = 0;
   for (const r of results) {
     if (myRun !== runId) return;
-    agentStatus.textContent = `reading ${hostName(r.url)} — keeping ${r.kept} of ${fmtK(r.raw)} tok…`;
+    agentStatus.textContent = `skimming ${hostName(r.url)}…`;
     resultsEl.insertAdjacentHTML('beforeend', cardHtml(r));
     kept += r.kept;
     raw += r.raw;
@@ -163,31 +88,27 @@ async function renderAgent(data, myRun) {
   await sleep(420);
   if (myRun !== runId) return;
 
-  renderAnswer(data.answer, raw);
-  const trimmed = raw ? (100 - (kept / raw) * 100) : 0;
-  const over = raw > BUDGET ? ' — raw wouldn’t fit your window' : '';
+  renderAnswer(data.answer);
+  const skipped = raw ? (100 - (kept / raw) * 100) : 0;
   agentStatus.textContent =
-    `${fmtK(raw)} tok of raw web → kept ${kept.toLocaleString('en-US')} · ${trimmed.toFixed(1)}% trimmed${over}`;
+    `${fmtK(raw)} tokens read, skipped ${skipped.toFixed(1)}% of the web`;
 }
 
 function cardHtml(r) {
   const host = hostName(r.url);
   const score = typeof r.score === 'number' ? r.score.toFixed(2) : '—';
-  const trimmed = r.raw ? Math.min(99, Math.round(100 - (r.kept / r.raw) * 100)) : 0;
   return `
     <div class="ctx-card">
       <div class="ctx-card-head">
         <span class="score">${score}</span>
         <span class="src">${escapeHtml(host)}</span>
-        <span class="toks"><span class="kept">${r.kept} tok</span> kept <span class="raw">/ ${fmtK(r.raw)} page</span></span>
-        <span class="chip">−${trimmed}%</span>
       </div>
       <a class="ctx-title" href="${escapeAttr(r.url)}">${escapeHtml(r.title)}</a>
       <div class="ctx-hl">“${escapeHtml(r.excerpt)}”</div>
     </div>`;
 }
 
-function renderAnswer(answer, rawTotal) {
+function renderAnswer(answer) {
   if (!answer || !answer.text) { answerEl.hidden = true; return; }
   const cites = answer.citations || [];
   const byNum = Object.fromEntries(cites.map((c) => [String(c.n), c]));
@@ -209,13 +130,9 @@ function renderAnswer(answer, rawTotal) {
     `<a href="${escapeAttr(c.url)}"><span class="n">${c.n}</span>${escapeHtml(c.host)}</a>`
   ).join('');
 
-  const ansTok = estTok(answer.text);
-  const saved = rawTotal ? ` (you'd have read ${fmtK(rawTotal)})` : '';
-
   answerEl.innerHTML = `
     <div class="answer-head">
       <span class="tag">answer</span>
-      <span>${cites.length} sources → 1 answer · ~${ansTok} tok${saved}</span>
     </div>
     <div class="answer-text">${text}</div>
     <div class="answer-srcs">${srcs}</div>`;
@@ -229,7 +146,7 @@ function setMeter(kept, raw) {
   const rawPct = Math.min(100, (raw / BUDGET) * 100);
   ctxRaw.style.width = rawPct.toFixed(1) + '%';
   ctxFill.style.width = (kept ? Math.max(keptPct, 0.6) : 0).toFixed(2) + '%';
-  ctxNums.textContent = `${kept.toLocaleString('en-US')} / ${BUDGET.toLocaleString('en-US')} tok kept`;
+  ctxNums.textContent = `${kept.toLocaleString('en-US')} / ${BUDGET.toLocaleString('en-US')} tok`;
 }
 
 function sleep(ms) { return new Promise((res) => setTimeout(res, ms)); }
@@ -266,32 +183,6 @@ function fmtK(n) {
 function hostName(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); }
   catch { return url; }
-}
-
-function prettySite(host) {
-  const root = host.split('.')[0];
-  return root.charAt(0).toUpperCase() + root.slice(1);
-}
-
-function breadcrumb(url) {
-  try {
-    const u = new URL(url);
-    const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '').split('/').filter(Boolean).join(' › ');
-    return u.hostname.replace(/^www\./, '') + (path ? ' › ' + path : '');
-  } catch { return url; }
-}
-
-const FAV_COLORS = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#9334e6', '#e8710a', '#1da1f2'];
-function faviconFor(host) {
-  let sum = 0;
-  for (let i = 0; i < host.length; i++) sum += host.charCodeAt(i);
-  return { letter: host.charAt(0).toUpperCase(), color: FAV_COLORS[sum % FAV_COLORS.length] };
-}
-
-function formatDate(iso) {
-  const d = new Date(iso);
-  if (isNaN(d)) return '';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function escapeHtml(s) {

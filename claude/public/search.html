@@ -3,16 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Google</title>
+  <title>Search</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a1a1a'/%3E%3Ctext x='16' y='24' font-family='Arial' font-size='23' font-weight='700' fill='white' text-anchor='middle'%3Ee%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="serp">
   <header class="serp-header">
     <div class="serp-header-row">
-      <a href="index.html" class="logo logo-small" aria-label="Google">
-        <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
-      </a>
       <form class="serp-search-form" id="searchForm" action="search.html" method="get" autocomplete="off">
         <div class="search-box serp-search-box">
           <input type="text" name="q" id="q" class="search-input" aria-label="Search" />
@@ -29,26 +26,11 @@
         </div>
       </form>
     </div>
-    <nav class="serp-tabs">
-      <a class="tab active" href="#">All</a>
-      <a class="tab" href="#">Images</a>
-      <a class="tab" href="#">News</a>
-      <a class="tab" href="#">Videos</a>
-      <a class="tab" href="#">Maps</a>
-      <a class="tab" href="#">More</a>
-    </nav>
   </header>
 
   <main class="serp-main">
     <div class="serp-controls">
       <div class="serp-stats" id="stats"></div>
-      <div class="controls-right">
-        <span class="agent-chip" id="agentChip" hidden>token-efficient</span>
-        <div class="view-toggle" id="viewToggle" role="tablist" aria-label="View">
-          <button class="vt" data-view="human" role="tab">human</button>
-          <button class="vt" data-view="agent" role="tab">agent</button>
-        </div>
-      </div>
     </div>
 
     <div class="ctx-meter" id="ctxMeter" hidden>
@@ -63,11 +45,6 @@
     <div class="answer-card" id="answer" hidden></div>
 
     <div id="results"></div>
-    <div id="pagination" class="pagination" hidden>
-      <span class="logo logo-pagination">
-        <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">o</span><span style="color:#34A853">o</span><span style="color:#EA4335">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
-      </span>
-    </div>
   </main>
 
   <footer class="footer footer-serp">

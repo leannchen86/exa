@@ -1,18 +1,12 @@
-// Homepage. Two doors to the same search:
-//   "Google Search"     -> human view (the disguise)
-//   "I'm Feeling Agentic" -> agent view (what the model sees)
+// Homepage. Both doors lead to the same agent search — "what the model sees":
+//   "Search"              -> the form submits to search.html
+//   "I'm Feeling Agentic" -> same destination, the on-brand way in
 
-const form = document.getElementById('searchForm');
 const input = document.getElementById('q');
 const agentic = document.getElementById('agentic');
-
-form.addEventListener('submit', () => {
-  localStorage.setItem('exoogle-view', 'human');
-});
 
 agentic.addEventListener('click', () => {
   const q = input.value.trim();
   if (!q) { input.focus(); return; }
-  localStorage.setItem('exoogle-view', 'agent');
   window.location.href = 'search.html?q=' + encodeURIComponent(q);
 });
