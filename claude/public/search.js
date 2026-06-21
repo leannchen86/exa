@@ -1,193 +1,223 @@
-// Results page: read ?q=, ask /api/search, render the agent view —
-// "what the model sees": context cards, a context-window meter, one cited answer.
+// Google results page. Reads ?q=, asks /api/search (Exa underneath), and
+// renders a faithful Google SERP: an AI Overview + organic blue-link results.
+// The whole joke is that none of this is Google — it's Exa answering.
 
 const params = new URLSearchParams(window.location.search);
 const query = (params.get('q') || '').trim();
 
 const input = document.getElementById('q');
 const statsEl = document.getElementById('stats');
+const aiEl = document.getElementById('aiOverview');
 const resultsEl = document.getElementById('results');
 const clearBtn = document.getElementById('clearBtn');
-const ctxMeter = document.getElementById('ctxMeter');
-const ctxRaw = document.getElementById('ctxRaw');
-const ctxFill = document.getElementById('ctxFill');
-const ctxNums = document.getElementById('ctxNums');
-const agentStatus = document.getElementById('agentStatus');
-const answerEl = document.getElementById('answer');
-
-const BUDGET = 200000; // context window, in tokens
-let DATA = null;
-let runId = 0; // bumped on each render so stale streams self-cancel
 
 input.value = query;
-document.title = query ? `${query} - Search` : 'Search';
-
+document.title = query ? `${query} - Google Search` : 'Google';
 clearBtn?.addEventListener('click', () => { input.value = ''; input.focus(); });
 
 if (!query) {
-  resultsEl.innerHTML = '<p class="empty">type a search to get started.</p>';
+  resultsEl.innerHTML = '';
 } else {
   run();
 }
 
 async function run() {
-  statsEl.textContent = '';
   try {
     const res = await fetch('/api/search?q=' + encodeURIComponent(query));
-    DATA = await res.json();
-    (DATA.results || []).forEach((r) => {
-      r.excerpt = clampExcerpt(r.snippet || r.summary || ''); // the slice we keep
-      r.kept = estTok(r.excerpt);   // tokens actually placed in context
-      r.raw = rawTokensFor(r.url);  // tokens the full page would have cost
-    });
-    renderAgent(DATA, ++runId);
+    const data = await res.json();
+    render(data);
   } catch (err) {
-    resultsEl.innerHTML = '<p class="empty">something went wrong reaching the search backend.</p>';
+    resultsEl.innerHTML = `<p class="g-empty">It looks like there aren't many great matches for your search.</p>`;
   }
 }
 
-// ============================================================ AGENT VIEW
-// Streams: search -> read each source, keep only a token-efficient slice ->
-// synthesize one answer. The meter contrasts raw web vs. tokens kept.
-async function renderAgent(data, myRun) {
+function render(data) {
   const results = data.results || [];
-  answerEl.hidden = true;
-  resultsEl.innerHTML = '';
 
+  // "About N results (X seconds)" — Google's quiet stat line.
+  const count = (210000 + Math.floor(Math.random() * 8_000_000)).toLocaleString('en-US');
+  const secs = data.elapsed != null ? data.elapsed : (0.3 + Math.random() * 0.4).toFixed(2);
+  statsEl.textContent = `About ${count} results (${secs} seconds)`;
+
+  renderAIOverview(data.answer, results);
+
+  let html = '';
+  results.forEach((r, i) => {
+    html += resultHtml(r);
+    if (i === 2) html += peopleAlsoAsk(query); // tuck PAA after the third result
+  });
   if (!results.length) {
-    ctxMeter.hidden = true;
-    statsEl.textContent = '';
-    resultsEl.innerHTML = `<p class="empty">0 docs retrieved. nothing to ingest.</p>`;
-    return;
+    html = `<p class="g-empty">Your search - <b>${esc(query)}</b> - did not match any documents.</p>`;
   }
-
-  statsEl.textContent = `${results.length} sources`;
-  ctxMeter.hidden = false;
-  setMeter(0, 0);
-
-  agentStatus.textContent = 'searching the web…';
-  await sleep(260);
-  if (myRun !== runId) return;
-
-  // Read each source, but keep only the relevant slice. The faint bar tracks
-  // what the raw pages would have cost; the bright sliver is what we kept.
-  let kept = 0;
-  let raw = 0;
-  for (const r of results) {
-    if (myRun !== runId) return;
-    agentStatus.textContent = `skimming ${hostName(r.url)}…`;
-    resultsEl.insertAdjacentHTML('beforeend', cardHtml(r));
-    kept += r.kept;
-    raw += r.raw;
-    setMeter(kept, raw);
-    await sleep(140);
-  }
-  if (myRun !== runId) return;
-
-  agentStatus.textContent = 'synthesizing answer…';
-  await sleep(420);
-  if (myRun !== runId) return;
-
-  renderAnswer(data.answer);
-  const skipped = raw ? (100 - (kept / raw) * 100) : 0;
-  agentStatus.textContent =
-    `${fmtK(raw)} tokens read, skipped ${skipped.toFixed(1)}% of the web`;
+  resultsEl.innerHTML = html;
 }
 
-function cardHtml(r) {
-  const host = hostName(r.url);
-  const score = typeof r.score === 'number' ? r.score.toFixed(2) : '—';
-  return `
-    <div class="ctx-card">
-      <div class="ctx-card-head">
-        <span class="score">${score}</span>
-        <span class="src">${escapeHtml(host)}</span>
+// ============================================================ AI OVERVIEW
+function renderAIOverview(answer, results) {
+  if (!answer || !answer.text) { aiEl.hidden = true; return; }
+  const cites = answer.citations || [];
+  const srcCount = Math.max(results.length, cites.length);
+
+  // Citations -> superscript chips, like Google's AI Overview.
+  let text = esc(answer.text);
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, label, url) => {
+    const rm = label.match(/^Result\s+(\d+)$/i);
+    return citeChip(rm ? rm[1] : label, url);
+  });
+  const byNum = Object.fromEntries(cites.map((c) => [String(c.n), c]));
+  text = text.replace(/\[(\d+)\]/g, (m, n) => (byNum[n] ? citeChip(n, byNum[n].url) : m));
+
+  const faviconStack = cites.slice(0, 3).map((c) =>
+    `<img class="aio-stackfav" src="${favicon(c.host)}" alt="" />`).join('');
+
+  const srcRows = cites.slice(0, 2).map((c) => `
+    <a class="aio-src" href="${esc(c.url)}">
+      <div class="aio-src-text">
+        <div class="aio-src-title">${esc(clip(c.title, 70))}</div>
+        <div class="aio-src-host">${esc(c.host)}</div>
       </div>
-      <a class="ctx-title" href="${escapeAttr(r.url)}">${escapeHtml(r.title)}</a>
-      <div class="ctx-hl">“${escapeHtml(r.excerpt)}”</div>
+      <img class="aio-src-thumb" src="${favicon(c.host)}" alt="" />
+    </a>`).join('');
+
+  aiEl.hidden = false;
+  aiEl.innerHTML = `
+    <div class="aio-inner">
+      <div class="aio-main">
+        <div class="aio-head">
+          <span class="aio-spark">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <defs><linearGradient id="gem" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#4285F4"/><stop offset=".5" stop-color="#9b72cb"/><stop offset="1" stop-color="#d96570"/>
+              </linearGradient></defs>
+              <path fill="url(#gem)" d="M12 2c.9 5.2 3.9 8.2 9 9-5.1.9-8.1 3.9-9 9-.9-5.1-3.9-8.1-9-9 5.1-.8 8.1-3.8 9-9z"/>
+            </svg>
+          </span>
+          <span class="aio-label">AI Overview</span>
+        </div>
+        <div class="aio-text">${text}</div>
+        <button class="aio-more" type="button">Show more <span class="chev">⌄</span></button>
+      </div>
+      <aside class="aio-card">
+        <div class="aio-card-head">
+          <span class="aio-favstack">${faviconStack}</span>
+          <span class="aio-sites">${srcCount} sites</span>
+        </div>
+        ${srcRows}
+      </aside>
+    </div>`;
+
+  aiEl.querySelector('.aio-more')?.addEventListener('click', (e) => {
+    aiEl.classList.toggle('expanded');
+    e.currentTarget.firstChild.textContent =
+      aiEl.classList.contains('expanded') ? 'Show less ' : 'Show more ';
+  });
+}
+
+function citeChip(n, url) {
+  return `<a class="aio-cite" href="${esc(url)}" title="${esc(url)}">${esc(n)}</a>`;
+}
+
+// ============================================================ ORGANIC RESULT
+function resultHtml(r) {
+  const host = hostName(r.url);
+  const date = r.publishedDate
+    ? `<span class="g-date">${formatDate(r.publishedDate)} — </span>` : '';
+  const body = deMarkdown(r.snippet || r.summary || '');
+  return `
+    <div class="g-result">
+      <div class="g-result-head">
+        <span class="g-fav-wrap"><img class="g-fav" src="${favicon(host)}" alt="" /></span>
+        <div class="g-site">
+          <div class="g-site-name">${esc(prettySite(host))}</div>
+          <div class="g-url">${esc(breadcrumb(r.url))}</div>
+        </div>
+        <button class="g-kebab" aria-label="About this result">⋮</button>
+      </div>
+      <a class="g-title" href="${esc(r.url)}">${esc(r.title)}</a>
+      <div class="g-snippet">${date}${esc(clip(body, 300))}</div>
     </div>`;
 }
 
-function renderAnswer(answer) {
-  if (!answer || !answer.text) { answerEl.hidden = true; return; }
-  const cites = answer.citations || [];
-  const byNum = Object.fromEntries(cites.map((c) => [String(c.n), c]));
-
-  // Turn citation markers into compact chips.
-  let text = escapeHtml(answer.text);
-  // real Exa /answer embeds markdown links, e.g. "([Result 1](https://…))"
-  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, label, url) => {
-    const rm = label.match(/^Result\s+(\d+)$/i);
-    return `<a class="cite" href="${url}" title="${url}">${rm ? rm[1] : label}</a>`;
-  });
-  // mock uses bare [1] [2] markers tied to the citations list
-  text = text.replace(/\[(\d+)\]/g, (m, n) => {
-    const c = byNum[n];
-    return c ? `<a class="cite" href="${escapeAttr(c.url)}" title="${escapeAttr(c.host)}">${n}</a>` : m;
-  });
-
-  const srcs = cites.map((c) =>
-    `<a href="${escapeAttr(c.url)}"><span class="n">${c.n}</span>${escapeHtml(c.host)}</a>`
-  ).join('');
-
-  answerEl.innerHTML = `
-    <div class="answer-head">
-      <span class="tag">answer</span>
-    </div>
-    <div class="answer-text">${text}</div>
-    <div class="answer-srcs">${srcs}</div>`;
-  answerEl.hidden = false;
+// ============================================================ PEOPLE ALSO ASK
+function peopleAlsoAsk(q) {
+  const Q = cap(q);
+  const qs = [
+    `What is ${q}?`,
+    `How does ${q} work?`,
+    `Why is ${q} important?`,
+    `What are examples of ${q}?`,
+  ];
+  const rows = qs.map((question) => `
+    <div class="paa-row">
+      <span class="paa-q">${esc(question)}</span>
+      <span class="paa-plus">+</span>
+    </div>`).join('');
+  return `
+    <section class="paa">
+      <h2 class="paa-title">People also ask</h2>
+      ${rows}
+    </section>`;
 }
 
 // --- helpers --------------------------------------------------------------
 
-function setMeter(kept, raw) {
-  const keptPct = Math.min(100, (kept / BUDGET) * 100);
-  const rawPct = Math.min(100, (raw / BUDGET) * 100);
-  ctxRaw.style.width = rawPct.toFixed(1) + '%';
-  ctxFill.style.width = (kept ? Math.max(keptPct, 0.6) : 0).toFixed(2) + '%';
-  ctxNums.textContent = `${kept.toLocaleString('en-US')} / ${BUDGET.toLocaleString('en-US')} tok`;
+function favicon(host) {
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
 }
 
-function sleep(ms) { return new Promise((res) => setTimeout(res, ms)); }
+// Strip raw markdown that Exa sometimes returns in page content, so snippets
+// read like clean Google snippets (no "##", backticks, bullets, bold markers).
+function deMarkdown(s) {
+  return String(s)
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s{0,3}[>*\-+]\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-// A token-efficient slice: keep just the relevant excerpt, not the whole page.
-function clampExcerpt(text, max = 200) {
+function clip(text, max) {
   text = (text || '').replace(/\s+/g, ' ').trim();
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
   const sp = cut.lastIndexOf(' ');
-  return cut.slice(0, sp > 120 ? sp : max).trim() + '…';
-}
-
-// ~4 chars per token, the usual rule of thumb.
-function estTok(text) { return Math.max(1, Math.ceil((text || '').length / 4)); }
-
-// Believable full-page token cost (what reading the whole thing would spend).
-// Deterministic per URL so it's stable across re-renders.
-function rawTokensFor(url) { return 4200 + (hashCode(url) % 24000); }
-
-function hashCode(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-// 1820 -> "1.8K", 18234 -> "18K"
-function fmtK(n) {
-  if (n < 1000) return String(n);
-  const k = n / 1000;
-  return (k < 10 ? k.toFixed(1) : Math.round(k)) + 'K';
+  return cut.slice(0, sp > max * 0.6 ? sp : max).trim() + '…';
 }
 
 function hostName(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); }
-  catch { return url; }
+  catch { return String(url); }
 }
 
-function escapeHtml(s) {
+function prettySite(host) {
+  const root = host.split('.')[0];
+  return root.charAt(0).toUpperCase() + root.slice(1);
+}
+
+function breadcrumb(url) {
+  try {
+    const u = new URL(url);
+    const path = u.pathname === '/' ? '' :
+      u.pathname.replace(/\/$/, '').split('/').filter(Boolean).join(' › ');
+    return u.hostname.replace(/^www\./, '') + (path ? ' › ' + path : '');
+  } catch { return String(url); }
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]));
 }
-function escapeAttr(s) { return escapeHtml(s); }

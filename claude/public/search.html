@@ -3,51 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Search</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a1a1a'/%3E%3Ctext x='16' y='24' font-family='Arial' font-size='23' font-weight='700' fill='white' text-anchor='middle'%3Ee%3C/text%3E%3C/svg%3E" />
+  <title>Google</title>
+  <link rel="icon" href="https://www.google.com/favicon.ico" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="serp">
   <header class="serp-header">
-    <div class="serp-header-row">
-      <form class="serp-search-form" id="searchForm" action="search.html" method="get" autocomplete="off">
-        <div class="search-box serp-search-box">
-          <input type="text" name="q" id="q" class="search-input" aria-label="Search" />
-          <button type="button" class="icon-btn" aria-label="Clear" id="clearBtn">
+    <div class="serp-top">
+      <a href="index.html" class="logo logo-small" aria-label="Google">
+        <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
+      </a>
+
+      <form class="serp-search" id="searchForm" action="search.html" method="get" autocomplete="off">
+        <div class="serp-search-box">
+          <input type="text" name="q" id="q" class="serp-input" aria-label="Search" />
+          <button type="button" class="sb-icon" id="clearBtn" aria-label="Clear">
             <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#70757a" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
-          <span class="search-divider"></span>
-          <button type="button" class="icon-btn" aria-label="Search by voice">
-            <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path fill="#34A853" d="M11 18.92h2V22h-2z"/><path fill="#FBBC05" d="M17.91 11a5.92 5.92 0 01-11.82 0H4.34a7.66 7.66 0 0014.32 0z"/></svg>
+          <span class="sb-divider"></span>
+          <button type="button" class="sb-icon" aria-label="Search by voice">
+            <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z"/><path fill="#34A853" d="M11 18.92h2V22h-2z"/><path fill="#FBBC05" d="M17.91 11a5.92 5.92 0 01-11.82 0H4.34a7.66 7.66 0 0014.32 0z"/></svg>
           </button>
-          <button type="submit" class="icon-btn" aria-label="Search">
-            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg>
+          <button type="button" class="sb-icon" aria-label="Search by image">
+            <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M12 9a3 3 0 100 6 3 3 0 000-6z"/><path fill="#9aa0a6" d="M9 2L7.17 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-3.17L15 2H9zm3 15a5 5 0 110-10 5 5 0 010 10z" opacity=".55"/></svg>
+          </button>
+          <span class="sb-divider"></span>
+          <button type="submit" class="sb-icon sb-search" aria-label="Search">
+            <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg>
           </button>
         </div>
       </form>
+
+      <div class="serp-actions">
+        <button class="hdr-icon" aria-label="Settings">
+          <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#5f6368" d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65A.49.49 0 0014 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+        </button>
+        <button class="hdr-icon" aria-label="Share">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#5f6368" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 100-6 3 3 0 00-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 100 6c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65a2.92 2.92 0 102.92-2.92z"/></svg>
+        </button>
+        <button class="hdr-icon" aria-label="Google apps">
+          <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#5f6368" d="M6 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        </button>
+        <button class="signin-btn">Sign in</button>
+      </div>
     </div>
+
+    <nav class="serp-tabs">
+      <a class="tab tab-ai" href="#">
+        <svg class="tab-spark" width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M12 2c.9 5.2 3.9 8.2 9 9-5.1.9-8.1 3.9-9 9-.9-5.1-3.9-8.1-9-9 5.1-.8 8.1-3.8 9-9z"/></svg>
+        AI Mode
+      </a>
+      <a class="tab active" href="#">All</a>
+      <a class="tab" href="#">Images</a>
+      <a class="tab" href="#">Videos</a>
+      <a class="tab" href="#">Forums</a>
+      <a class="tab" href="#">Shopping</a>
+      <a class="tab" href="#">Short videos</a>
+      <a class="tab" href="#">More ▾</a>
+      <span class="tabs-spacer"></span>
+      <a class="tab tab-tools" href="#">Tools</a>
+    </nav>
   </header>
 
   <main class="serp-main">
-    <div class="serp-controls">
-      <div class="serp-stats" id="stats"></div>
-    </div>
-
-    <div class="ctx-meter" id="ctxMeter" hidden>
-      <div class="ctx-head">
-        <span>context window</span>
-        <span id="ctxNums">0 / 200,000 tok</span>
-      </div>
-      <div class="ctx-track"><div class="ctx-raw" id="ctxRaw"></div><div class="ctx-fill" id="ctxFill"></div></div>
-      <div class="agent-status" id="agentStatus"></div>
-    </div>
-
-    <div class="answer-card" id="answer" hidden></div>
-
+    <div class="result-stats" id="stats"></div>
+    <div id="aiOverview" class="ai-overview" hidden></div>
     <div id="results"></div>
   </main>
 
   <footer class="footer footer-serp">
+    <div class="footer-top">United States</div>
     <div class="footer-bottom">
       <div class="footer-links">
         <a href="#">Help</a><a href="#">Send feedback</a><a href="#">Privacy</a><a href="#">Terms</a>

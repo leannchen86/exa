@@ -1,12 +1,9 @@
-// Homepage. Both doors lead to the same agent search — "what the model sees":
-//   "Search"              -> the form submits to search.html
-//   "I'm Feeling Agentic" -> same destination, the on-brand way in
+// Google homepage. The form submits to search.html — Exa answers underneath.
+// "I'm Feeling Lucky" submits the same search (the joke is the backend, not the button).
 
+const form = document.getElementById('searchForm');
 const input = document.getElementById('q');
-const agentic = document.getElementById('agentic');
 
-agentic.addEventListener('click', () => {
-  const q = input.value.trim();
-  if (!q) { input.focus(); return; }
-  window.location.href = 'search.html?q=' + encodeURIComponent(q);
+form.addEventListener('submit', (e) => {
+  if (!input.value.trim()) { e.preventDefault(); input.focus(); }
 });

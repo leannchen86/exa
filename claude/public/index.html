@@ -3,22 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Search</title>
-  <!-- subtle tell #1: the favicon isn't a 'G'. -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a1a1a'/%3E%3Ctext x='16' y='24' font-family='Arial' font-size='23' font-weight='700' fill='white' text-anchor='middle'%3Ee%3C/text%3E%3C/svg%3E" />
+  <title>Google</title>
+  <link rel="icon" href="https://www.google.com/favicon.ico" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="home">
   <header class="top-nav">
     <a href="#">Gmail</a>
     <a href="#">Images</a>
-    <button class="apps-btn" aria-label="Apps">
+    <button class="apps-btn" aria-label="Google apps">
       <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#5f6368" d="M6 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
     </button>
     <button class="signin-btn">Sign in</button>
   </header>
 
   <main class="home-main">
+    <div class="logo" aria-label="Google">
+      <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
+    </div>
+
     <form class="search-form" id="searchForm" action="search.html" method="get" autocomplete="off">
       <div class="search-box">
         <svg class="icon-search" width="20" height="20" viewBox="0 0 24 24"><path fill="#9aa0a6" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg>
@@ -32,12 +35,12 @@
       </div>
 
       <div class="buttons">
-        <button type="submit" class="g-btn">Search</button>
-        <button type="button" class="g-btn" id="agentic">I'm Feeling Agentic</button>
+        <button type="submit" class="g-btn">Google Search</button>
+        <button type="submit" class="g-btn" id="lucky">I'm Feeling Lucky</button>
       </div>
     </form>
 
-    <p class="offered">Offered in: Français · Español · 中文 · العربية</p>
+    <p class="offered">Google offered in: Français · Español · 中文 · العربية</p>
   </main>
 
   <footer class="footer">
