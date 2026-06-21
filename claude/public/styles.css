@@ -10,15 +10,10 @@ html, body {
 
 a { text-decoration: none; }
 
-/* ---------- shared logo ---------- */
-.logo {
-  font-family: 'Product Sans', 'Segoe UI', arial, sans-serif;
-  font-weight: 500;
-  font-size: 92px;
-  letter-spacing: -5px;
-  user-select: none;
-}
-.logo-small { font-size: 28px; letter-spacing: -2px; line-height: 1; }
+/* ---------- shared logo (Google's actual wordmark asset) ---------- */
+.logo-img { width: 272px; max-width: 90vw; height: auto; user-select: none; }
+.serp-logo { display: inline-flex; }
+.serp-logo img { height: 30px; width: auto; display: block; }
 
 /* ============================================================ HOME */
 body.home { display: flex; flex-direction: column; min-height: 100vh; }
@@ -54,7 +49,7 @@ body.home { display: flex; flex-direction: column; min-height: 100vh; }
   justify-content: flex-start;
   padding-top: 18vh;
 }
-.home-main .logo { margin-bottom: 26px; }
+.home-main .logo-img { margin-bottom: 26px; }
 
 .search-form { width: 100%; display: flex; flex-direction: column; align-items: center; }
 .search-box {
@@ -111,7 +106,7 @@ body.serp { display: flex; flex-direction: column; min-height: 100vh; }
   align-items: center;
   padding: 16px 28px 0 var(--gut);
 }
-.serp-top .logo-small { margin-top: -6px; }
+.serp-top .serp-logo { margin-top: -2px; }
 .serp-search { margin-left: 40px; flex: 0 1 692px; }
 .serp-search-box {
   display: flex; align-items: center;
