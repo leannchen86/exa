@@ -22,13 +22,18 @@ if (!query) {
 }
 
 async function run() {
-  try {
-    const res = await fetch('/api/search?q=' + encodeURIComponent(query));
-    const data = await res.json();
-    render(data);
-  } catch (err) {
-    resultsEl.innerHTML = `<p class="g-empty">It looks like there aren't many great matches for your search.</p>`;
+  // Static hosts (GitHub Pages, file://) have no /api/search backend, so go
+  // straight to the bundled mock. Locally the server answers (real Exa if keyed).
+  const isStatic = location.protocol === 'file:' || location.hostname.endsWith('github.io');
+  let data = null;
+  if (!isStatic) {
+    try {
+      const res = await fetch('/api/search?q=' + encodeURIComponent(query));
+      if (res.ok) data = await res.json();
+    } catch (_) { /* fall through to mock */ }
   }
+  if (!data) data = window.mockSearch ? window.mockSearch(query) : { results: [], answer: null };
+  render(data);
 }
 
 function render(data) {
