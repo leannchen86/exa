@@ -2,6 +2,11 @@
 // renders a faithful Google SERP: an AI Overview + organic blue-link results.
 // The whole joke is that none of this is Google — it's Exa answering.
 
+// Worker URL for real Exa results on the static (GitHub Pages) site. Leave empty
+// to serve mock results there. Set it to your deployed Cloudflare Worker, e.g.
+// 'https://exoogle-api.you.workers.dev' (see ../worker/README.md).
+const EXA_PROXY = '';
+
 const params = new URLSearchParams(window.location.search);
 const query = (params.get('q') || '').trim();
 
@@ -22,13 +27,14 @@ if (!query) {
 }
 
 async function run() {
-  // Static hosts (GitHub Pages, file://) have no /api/search backend, so go
-  // straight to the bundled mock. Locally the server answers (real Exa if keyed).
+  // Locally the server answers (real Exa if keyed). On a static host the Worker
+  // answers if EXA_PROXY is set; otherwise fall back to the bundled mock.
   const isStatic = location.protocol === 'file:' || location.hostname.endsWith('github.io');
+  const endpoint = isStatic ? (EXA_PROXY || null) : '/api/search';
   let data = null;
-  if (!isStatic) {
+  if (endpoint) {
     try {
-      const res = await fetch('/api/search?q=' + encodeURIComponent(query));
+      const res = await fetch(endpoint + (endpoint.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(query));
       if (res.ok) data = await res.json();
     } catch (_) { /* fall through to mock */ }
   }
